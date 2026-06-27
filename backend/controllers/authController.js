@@ -3,6 +3,8 @@ const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const fs = require('fs');
+const path = require('path');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -159,6 +161,19 @@ const updateAvatar = async (req, res) => {
     }
     
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    const currentUser = await User.findById(req.user.id);
+    if (currentUser && currentUser.avatarUrl && currentUser.avatarUrl.includes('/uploads/')) {
+      try {
+        const oldFilename = currentUser.avatarUrl.split('/uploads/')[1];
+        const oldFilePath = path.join(__dirname, '..', 'uploads', oldFilename);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      } catch (err) {
+        console.error('Failed to delete old avatar:', err);
+      }
+    }
     
     const user = await User.findByIdAndUpdate(
       req.user.id,
