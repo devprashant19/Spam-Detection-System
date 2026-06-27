@@ -22,7 +22,11 @@ const fileFilter = (req, file, cb) => {
     cb(null, false);
   }
 };
-const upload = multer({ storage, fileFilter });
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit to prevent DoS
+});
 const registerValidation = [
   body('username').trim().isLength({ min: 3, max: 30 }).withMessage('Username must be 3–30 characters'),
   body('email').isEmail().withMessage('Please enter a valid email'),
